@@ -2,6 +2,6 @@ streamlit
 numpy
 joblib
 scikit-learn
-sentence_transformers
+sentence_transformers<=3.3.1
 faiss-cpu
 rank_bm25
