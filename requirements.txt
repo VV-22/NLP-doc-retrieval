@@ -4,3 +4,4 @@ joblib
 scikit-learn
 sentence_transformers
 faiss-cpu
+rank_bm25
