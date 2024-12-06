@@ -25,6 +25,7 @@ if "KNNModel" not in st.session_state:
 
 if "sbert" not in st.session_state:
     st.session_state.sbert = load("sbert.joblib")
+    st.session_state.sbert.tokenizer.pad_token = st.session_state.sbert.tokenizer.eos_token
 
 if "faiss" not in st.session_state:
     st.session_state.faiss = load("faiss.joblib")
