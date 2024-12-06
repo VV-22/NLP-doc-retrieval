@@ -26,7 +26,7 @@ if "KNNModel" not in st.session_state:
 if "sbert" not in st.session_state:
     st.session_state.sbert = load("sbert.joblib")
     st.session_state.sbert.tokenizer.pad_token = "[UNK]"
-    st.session_state.sbert.tokenizer.pad_token_id = st.session_state.sbert.tokenizer..convert_tokens_to_ids("[UNK]")
+    st.session_state.sbert.tokenizer.pad_token_id = st.session_state.sbert.tokenizer.convert_tokens_to_ids("[UNK]")
     # print(f"tokens : {st.session_state.sbert.tokenizer}")
 
 if "faiss" not in st.session_state:
