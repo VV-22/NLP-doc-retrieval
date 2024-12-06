@@ -101,7 +101,7 @@ def faiss_answer(question):
 
 def bm25_answer(question):
     bm_tokens = question.lower().split()
-    bm_scores = st.session_state.np.argsort(bm25.get_scores(bm_tokens))[::-1][:10]
+    bm_scores = np.argsort(bm25.get_scores(bm_tokens))[::-1][:10]
     return bm_scores
 
 if st.session_state.question:
