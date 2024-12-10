@@ -1,6 +1,8 @@
 import streamlit as st
 from joblib import load
 import numpy as np
+import pandas as pd
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 
 
 print("Loaded")
@@ -27,13 +29,15 @@ if "sbert" not in st.session_state:
     st.session_state.sbert = load("sbert.joblib")
     st.session_state.sbert.tokenizer.pad_token = "[UNK]"
     st.session_state.sbert.tokenizer.pad_token_id = st.session_state.sbert.tokenizer.convert_tokens_to_ids("[UNK]")
-    # print(f"tokens : {st.session_state.sbert.tokenizer}")
 
 if "faiss" not in st.session_state:
     st.session_state.faiss = load("faiss.joblib")
 
 if "bm25" not in st.session_state:
     st.session_state.bm25 = load("bm25.joblib")
+
+if "docs" not in st.session_state:
+    st.session_state.docs = load("docs.joblib")
 
 
 if "model" not in st.session_state:
@@ -92,20 +96,47 @@ def save_ques():
     st.session_state.question = st.session_state.question_param
     st.session_state.question_param = ''
 
+def get_model():
+    qa_model_name = "dmis-lab/biobert-large-cased-v1.1-squad"
+    tokenizer = AutoTokenizer.from_pretrained(qa_model_name)
+    model = AutoModelForQuestionAnswering.from_pretrained(qa_model_name)
+    return tokenizer, model
+
+def get_answer(question, context):
+    tokenizer, model = get_model()
+    qa_pipeline = pipeline("question-answering", model=model, tokenizer=tokenizer)
+    answer = qa_pipeline({'question': question, 'context': context})
+    return answer
+
+def get_most_relevant_doc(indices):
+    relevant_docs = [st.session_state.docs[i] for i in indices]
+    best_doc = relevant_docs[0]
+    return best_doc
+
 def knn_answer(question):
     tfidf = st.session_state.TFIDFEmbedding.transform([question])
     knn_ans = st.session_state.KNNModel.kneighbors(tfidf , return_distance=False)
-    return knn_ans
+    knn_ans = knn_ans.flatten().tolist()
+    best_doc = get_most_relevant_doc(knn_ans)
+    answer = get_answer(question, best_doc)
+    return answer['answer']
 
 def faiss_answer(question):
     sbert_embedding = st.session_state.sbert.encode([question]).astype('float32')
     dustabces, indices = st.session_state.faiss.search(sbert_embedding , 10)
-    return indices
+    indices = indices.flatten().tolist()
+    best_doc = get_most_relevant_doc(indices)
+    answer = get_answer(question, best_doc)
+    return answer['answer']
 
 def bm25_answer(question):
     bm_tokens = question.lower().split()
     bm_scores = np.argsort(st.session_state.bm25.get_scores(bm_tokens))[::-1][:10]
-    return bm_scores
+    best_doc = get_most_relevant_doc(bm_scores)
+    answer = get_answer(question, best_doc)
+    return answer['answer']
+
+
 
 if st.session_state.question:
     if st.session_state.model:
