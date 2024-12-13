@@ -1,4 +1,4 @@
-# %%
+# Import necessary the packages.
 from joblib import dump, load
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,7 +8,7 @@ from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 import string
 from collections import Counter
 
-# %%
+# Load the document retrieval models.
 TFIDFEmbedding = load("TFIDFEmbedding.joblib")
 KNNModel = load("KNNModel.joblib")
 
@@ -17,10 +17,11 @@ faiss = load("faiss.joblib")
 
 bm25 = load("bm25.joblib")
 
+# Load the dataset and transcriptions as documents.
 df = pd.read_csv("synthetic_names_samples.csv")
 docs = df['transcription'].tolist()
 
-# %%
+# Append the sample questions to questions and ground truth indices to answers.
 questions = []
 answers = []
 
@@ -55,7 +56,7 @@ questions.append("What were the symptoms on Jason Olguin who was given amphoteri
 answers.append(1593)
 
 
-# %%
+# Generate and store answers for each question using TFIDF + KNN, SBERT + FAISS, and BM25 retrieval models.
 knn_answers = []
 faiss_answers = []
 bm25_answers = []
@@ -78,8 +79,7 @@ for question in questions:
     bm_scores = np.argsort(bm25.get_scores(bm_tokens))[::-1][:10]
     bm25_answers.append(bm_scores)
 
-# %%
-# Accuracy scores:
+# Calculate accuracy and Mean Reciprocal Rank (MRR) for the KNN, FAISS, and BM25 retrieval models.
 faiss_accuracy = 0
 bm25_accuracy = 0
 knn_accuracy = 0
@@ -102,12 +102,12 @@ for i in range(0, 10, 1):
         bm_index = bm25_answers[i].tolist().index(answers[i]) + 1
         bm25_inverse += (1/bm_index)
 
-# %%
+# Calculate the Mean Reciprocal Rank (MRR) for KNN, FAISS, and BM25 models.
 knn_mrr = knn_inverse / len(answers)
 faiss_mrr = faiss_inverse / len(answers)
 bm25_mrr = bm25_inverse / len(answers)
 
-# %%
+# Print the metrics.
 print("knn mrr : " , knn_mrr)
 print("knn accuracy : " , knn_accuracy/10)
 print("faiss mrr : " , faiss_mrr)
@@ -115,7 +115,7 @@ print("faiss accuracy : " , faiss_accuracy/10)
 print("bm25 mrr : " , bm25_mrr)
 print("bm25 accuracy : " , bm25_accuracy/10)
 
-# %%
+# Visualize Accuracy and MRR (Mean Reciprocal Rank) for KNN + TFIDF, SBERT + FAISS, and BM25 models.
 models = ['KNN+ TFIDF', 'SBERT + FAISS', 'BM25']
 accuracy_scores = [knn_accuracy / 10, faiss_accuracy / 10, bm25_accuracy / 10]
 
@@ -143,19 +143,19 @@ for i, score in enumerate(mrr_scores):
 plt.tight_layout()
 plt.show()
 
-# %%
 # Tests for part 2 of the model : Question Answering
 
-# %%
+# Load the BioBert model and set up the QA pipeline.
 qa_model_name = "dmis-lab/biobert-large-cased-v1.1-squad"
 tokenizer = AutoTokenizer.from_pretrained(qa_model_name)
 model = AutoModelForQuestionAnswering.from_pretrained(qa_model_name)
 qa_pipeline = pipeline("question-answering", model=model, tokenizer=tokenizer)
 
-# %%
+# List of questions and corresponding context documents.
 questions = []
 documents = []
 
+# Add questions and context documents.
 questions.append("What is Charlie Harlow's dosage?")
 documents.append(docs[0])
 
@@ -186,7 +186,7 @@ documents.append(docs[1546])
 questions.append("What were the symptoms on Jason Olguin who was given amphotericin?")
 documents.append(docs[1593])
 
-# %%
+# Ground truth answers for each question.
 ground_truths = ["Samples of Nasonex two sprays in each nostril given for three weeks.", "66-year-old"
                  , "Right common femoral artery cannulation", "After risk of operation was explained to this patient's family"
                  , "The tip of the endoscope was introduced into the rectum."
@@ -196,13 +196,13 @@ ground_truths = ["Samples of Nasonex two sprays in each nostril given for three 
                  , "mild degenerative"
                  , "HA, nausea and vomiting"]
 
-# %%
+# Generate predictions for each question using the QA pipeline.
 predictions = []
 for i in range(len(questions)):
     prediction = qa_pipeline({'question': questions[i], 'context': documents[i]})
     predictions.append(prediction['answer'])
 
-# %%
+# Method to normalize text (lowercase, remove punctuation, and remove articles).
 def normalize_text(s):
     def remove_articles(text):
         return ' '.join([word for word in text.split() if word not in ('a', 'an', 'the')])
@@ -215,6 +215,7 @@ def normalize_text(s):
     
     return remove_articles(remove_punctuation(to_lower(s))).strip()
 
+# Method to compute the F1 score for a single prediction and ground truth.
 def compute_f1(prediction, ground_truth):
     prediction_tokens = normalize_text(prediction).split()
     ground_truth_tokens = normalize_text(ground_truth).split()
@@ -233,6 +234,7 @@ def compute_f1(prediction, ground_truth):
     f1 = 2 * precision * recall / (precision + recall)
     return f1
 
+# Method to compute the average F1 score for multiple predictions and ground truths.
 def compute_average_f1(predictions, ground_truths):
     assert len(predictions) == len(ground_truths), "Number of predictions and ground truths must match."
     f1_scores = [compute_f1(prediction, ground_truth) for prediction, ground_truth in zip(predictions, ground_truths)]
@@ -240,7 +242,7 @@ def compute_average_f1(predictions, ground_truths):
     return average_f1
 
 
-# %%
+# Calculate and print the average F1 score for all questions.
 print("F1 Score: " + str(compute_average_f1(predictions, ground_truths)))
 
 
