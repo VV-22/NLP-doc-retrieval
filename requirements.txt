@@ -7,3 +7,5 @@ faiss-cpu==1.9.0.post1
 rank_bm25==0.2.2
 transformers==4.47.0
 torch==2.5.1
+keybert
+names
