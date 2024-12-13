@@ -52,6 +52,10 @@ if "bm25" not in st.session_state:
 if "docs" not in st.session_state:
     st.session_state.docs = load("docs.joblib")
 
+if "tokenizer" not in st.session_state:
+    qa_model_name = "dmis-lab/biobert-large-cased-v1.1-squad"
+    st.session_state.tokenizer = AutoTokenizer.from_pretrained(qa_model_name)
+    st.session_state.model = AutoModelForQuestionAnswering.from_pretrained(qa_model_name)
 
 if "model" not in st.session_state:
     st.session_state.model = ""
@@ -113,9 +117,8 @@ def save_ques():
 
 #Loads the pre-trained BioBERT model for question answering.
 def get_model():
-    qa_model_name = "dmis-lab/biobert-large-cased-v1.1-squad"
-    tokenizer = AutoTokenizer.from_pretrained(qa_model_name)
-    model = AutoModelForQuestionAnswering.from_pretrained(qa_model_name)
+    tokenizer = st.session_state.tokenizer
+    model = st.session_state.model
     return tokenizer, model
 
 # Retrieves an answer for a question given a context using BioBERT.
