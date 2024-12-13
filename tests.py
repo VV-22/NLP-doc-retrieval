@@ -109,8 +109,11 @@ bm25_mrr = bm25_inverse / len(answers)
 
 # %%
 print("knn mrr : " , knn_mrr)
+print("knn accuracy : " , knn_accuracy/10)
 print("faiss mrr : " , faiss_mrr)
+print("faiss accuracy : " , faiss_accuracy/10)
 print("bm25 mrr : " , bm25_mrr)
+print("bm25 accuracy : " , bm25_accuracy/10)
 
 # %%
 models = ['KNN+ TFIDF', 'SBERT + FAISS', 'BM25']
