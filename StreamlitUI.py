@@ -55,7 +55,7 @@ if "docs" not in st.session_state:
 if "tokenizer" not in st.session_state:
     qa_model_name = "dmis-lab/biobert-large-cased-v1.1-squad"
     st.session_state.tokenizer = AutoTokenizer.from_pretrained(qa_model_name)
-    st.session_state.model = AutoModelForQuestionAnswering.from_pretrained(qa_model_name)
+    st.session_state.model_qa = AutoModelForQuestionAnswering.from_pretrained(qa_model_name)
 
 if "model" not in st.session_state:
     st.session_state.model = ""
@@ -123,7 +123,8 @@ def get_model():
 
 # Retrieves an answer for a question given a context using BioBERT.
 def get_answer(question, context):
-    tokenizer, model = get_model()
+    tokenizer = st.session_state.tokenizer 
+    model = st.session_state.model_qa
     qa_pipeline = pipeline("question-answering", model=model, tokenizer=tokenizer)
     answer = qa_pipeline({'question': question, 'context': context})
     return answer
